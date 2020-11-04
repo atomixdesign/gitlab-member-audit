@@ -1,6 +1,7 @@
 import React from 'react'
 import { useAppSelector } from './app/store'
 import { GroupList } from './components/group-list/group-list'
+import { MemberList } from './components/member-list/member-list'
 
 export const App = () => {
   const isAuthenticated = useAppSelector(state => state.user.authenticated)
@@ -8,7 +9,10 @@ export const App = () => {
   return (
     <div>
       {isAuthenticated && (
-        <GroupList />
+        <>
+          <GroupList />
+          <MemberList />
+        </>
       )}
     </div>
   )

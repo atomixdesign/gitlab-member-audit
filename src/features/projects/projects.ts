@@ -1,8 +1,9 @@
-import { createEntityAdapter, createSlice } from '@reduxjs/toolkit'
+import { createEntityAdapter, createSlice, EntityState } from '@reduxjs/toolkit'
 import { RootState } from '../../app/store'
+import { Member } from '../members/members'
 
-type Project = {
-
+export type Project = {
+  members: EntityState<Member>[]
 }
 
 const projectsAdapter = createEntityAdapter<Project>()
