@@ -1,6 +1,4 @@
 import React from 'react'
-import { baseUrl } from '../../app/gitlab'
-import { Group } from '../../features/groups/groups'
 import { StyledCard } from './styled-card'
 import { StyledHeader } from './styled-header'
 import { StyledFooter } from './styled-footer'
@@ -9,9 +7,9 @@ import { StyledAvatar, StyledPlaceholder } from './styled-avatar'
 import { StyledCardBody } from './styled-card-body'
 
 type Props = {
-  name: string
+  name: string | JSX.Element
   avatarUrl?: string | null
-  footer?: string
+  footer?: string | JSX.Element
 }
 
 export const Card: React.FC<Props> = ({ name, avatarUrl, footer }) => {
@@ -20,7 +18,7 @@ export const Card: React.FC<Props> = ({ name, avatarUrl, footer }) => {
       {avatarUrl ? (
         <StyledAvatar src={avatarUrl} size={40} />
       ) : (
-        <StyledPlaceholder size={40} text={name} />
+        <StyledPlaceholder size={40} text={typeof name === 'string' ? name : '?'} />
       )}
       <StyledCardBody>
         <StyledHeader>

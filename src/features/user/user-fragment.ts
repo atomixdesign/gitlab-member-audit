@@ -6,5 +6,6 @@ export const UserFragment = gql`
         email
         name
         username
+        avatarUrl
     }
 `

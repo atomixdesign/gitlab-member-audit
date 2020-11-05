@@ -22,7 +22,7 @@ type Props = AvatarProps & {
 }
 
 export const Placeholder: React.FC<Props & HTMLAttributes<HTMLDivElement>> = ({ size = 20, initials, text, ...props }) => {
-  const seed = initials || makeInitials(text)
+  const seed = String(initials || makeInitials(text)).toUpperCase()
 
   const color = randomColor({
     luminosity: 'light',

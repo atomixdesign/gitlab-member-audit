@@ -1,8 +1,12 @@
 import { createEntityAdapter, createSlice } from '@reduxjs/toolkit'
 import { RootState } from '../../app/store'
+import { User } from '../user/user'
 
 export type Member = {
-
+  user: User
+  accessLevel: {
+    stringValue: string
+  }
 }
 
 export const membersAdapter = createEntityAdapter<Member>()

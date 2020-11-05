@@ -7,6 +7,7 @@ import { StyledList } from '../list/styled-list'
 import { StyledListItem } from '../list/styled-list-item'
 import { GroupCard } from '../group-card/group-card'
 import { loadGroupMembers } from '../../features/groups/thunks/load-group-members'
+import { Card } from '../card/card'
 
 export const GroupList: React.FC = () => {
   const loaded = useAppSelector(state => state.groups.loaded)
@@ -28,7 +29,10 @@ export const GroupList: React.FC = () => {
 
   return loading ? <Loading /> : (
     <div>
-      <h2>Groups</h2>
+      <Card name={<h2>Groups</h2>} />
+
+      <h3>All groups</h3>
+      <small>{groups.length} groups</small>
 
       <StyledList>
         {groups.map((group) => (
