@@ -3,6 +3,7 @@ import { RootState } from '../../app/store'
 import { User } from '../user/user'
 
 export type Member = {
+  id: string
   user: User
   accessLevel: {
     stringValue: string

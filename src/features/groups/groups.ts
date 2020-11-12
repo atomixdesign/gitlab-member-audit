@@ -4,6 +4,9 @@ import { PageInfo } from '../../relay'
 import { loadGroups, LoadGroupsPayload } from './thunks'
 import { Member, membersAdapter } from '../members/members'
 import { loadGroupMembers, LoadGroupMembersInput, LoadGroupMembersPayload } from './thunks/load-group-members'
+import { setIsBulkLoading } from '../projects/projects'
+import { loadProjects } from '../projects/thunks/load-projects'
+import { User } from '../user/user'
 
 export type Group = {
   id: string
@@ -12,8 +15,18 @@ export type Group = {
   fullPath: string
 }
 
+type ProjectMembership = {
+  id: string
+  accessLevel: Member["accessLevel"]
+}
+
+type UserWithMemberships = User & {
+  memberships: EntityState<ProjectMembership>
+}
+
 export type GroupEntities = {
   members?: EntityState<Member> & Loadable
+  nonMembers?: EntityState<UserWithMemberships>
 }
 
 export type GroupWithEntities = Group & GroupEntities
@@ -27,6 +40,10 @@ export const groupHasEntities = (group: GroupWithEntities): group is GroupWithAl
     return false
   }
 
+  if (group.nonMembers === undefined) {
+    return false
+  }
+
   return true
 }
 
@@ -34,6 +51,10 @@ type InitialState = Loadable & {
   pageInfo?: PageInfo
   selected?: string
 }
+
+export const nonMembersAdapter = createEntityAdapter<UserWithMemberships>()
+
+export const projectMembershipAdapter = createEntityAdapter<ProjectMembership>()
 
 const initialState: InitialState = {
   loading: false,
@@ -83,6 +104,50 @@ export const { actions, reducer } = createSlice({
       group.members.pageInfo = action.payload.pageInfo
       group.members = membersAdapter.upsertMany(group.members, action.payload.nodes)
     })
+    .addCase(loadProjects.fulfilled, (state, action) => {
+      if (action.payload.nodes.length > 0 && state.selected) {
+        const group = setupGroup(state, state.selected)
+        const projects = action.payload.nodes
+        const memberIds = membersAdapter.getSelectors().selectIds(group.members)
+
+        projects.forEach((project) => {
+          project.projectMembers.edges.forEach((edge) => {
+            const member = edge.node
+
+            if (memberIds.includes(member.id)) {
+              return
+            }
+
+            const existingUser = nonMembersAdapter.getSelectors().selectById(group.nonMembers, member.user.id)
+            if (existingUser) {
+              nonMembersAdapter.updateOne(group.nonMembers, {
+                id: member.user.id,
+                changes: {
+                  memberships: projectMembershipAdapter.upsertOne(existingUser.memberships, {
+                    id: project.id,
+                    accessLevel: member.accessLevel,
+                  })
+                }
+              })
+            } else {
+              const newMember: UserWithMemberships = {
+                ...member.user,
+                memberships: projectMembershipAdapter.getInitialState()
+              }
+
+              projectMembershipAdapter.setAll(newMember.memberships, [
+                {
+                  id: project.id,
+                  accessLevel: member.accessLevel,
+                }
+              ])
+
+              nonMembersAdapter.upsertOne(group.nonMembers, newMember)
+            }
+          })
+        })
+      }
+    })
   },
 })
 
@@ -107,6 +172,8 @@ const setupGroup = (state: EntityState<GroupWithEntities>, id: string): GroupWit
       loaded: false,
       loading: false,
     })
+
+    group.nonMembers = nonMembersAdapter.getInitialState()
   }
 
   return group as GroupWithAllEntities
